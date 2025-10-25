@@ -1787,6 +1787,10 @@ export function VisualMap() {
       const fromBox = clusterMetadata[conn.from];
       const toBox = clusterMetadata[conn.to];
 
+      // Get the color from the source box's layer (line matches source box color)
+      const sourceLayer = fromBox.layer;
+      const lineColor = layerColors.find(lc => lc.layer === sourceLayer)?.color || conn.color;
+
       // Get dynamic positions or use defaults
       const fromPos = boxPositions[conn.from] || { x: fromBox.x, y: fromBox.y };
       const toPos = boxPositions[conn.to] || { x: toBox.x, y: toBox.y };
@@ -1888,7 +1892,7 @@ export function VisualMap() {
           <path
             d={pathData}
             fill="none"
-            stroke={conn.color}
+            stroke={lineColor}
             strokeWidth={strokeWidth}
             opacity={opacity}
             markerEnd={`url(#arrowhead-${idx})`}
@@ -1913,7 +1917,7 @@ export function VisualMap() {
             >
               <path
                 d="M0,0 L0,14 L14,7 z"
-                fill={conn.color}
+                fill={lineColor}
                 opacity={isConnectedToSelected || isHovered ? "1.0" : "0.6"}
                 style={{ transition: 'opacity 0.3s' }}
               />

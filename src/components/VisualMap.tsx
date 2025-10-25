@@ -48,6 +48,7 @@ export function VisualMap() {
   const [hoveredConnection, setHoveredConnection] = useState<number | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [selectedBox, setSelectedBox] = useState<number | null>(null);
+  const [connectionFilter, setConnectionFilter] = useState<'both' | 'outgoing' | 'incoming'>('both');
 
   const handleZoomIn = () => {
     setZoom(prev => Math.min(prev + 0.2, 2));
@@ -1798,12 +1799,18 @@ export function VisualMap() {
 
       const x1 = fromEdge.x;
       const y1 = fromEdge.y;
-      const x2 = toEdge.x;
-      const y2 = toEdge.y;
+
+      // Calculate direction and distance
+      const dx = toEdge.x - fromEdge.x;
+      const dy = toEdge.y - fromEdge.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Pull back the endpoint so arrowhead sits just outside the box edge at convergence point
+      const arrowOffset = 12; // Pull back 12 pixels from edge
+      const x2 = toEdge.x - (dx / distance) * arrowOffset;
+      const y2 = toEdge.y - (dy / distance) * arrowOffset;
 
       // Calculate control points for smooth Bezier curve
-      const dx = x2 - x1;
-      const dy = y2 - y1;
       const controlPointOffset = Math.abs(dx) > Math.abs(dy) ? Math.abs(dx) * 0.4 : Math.abs(dy) * 0.4;
 
       // Create curved path
@@ -1815,7 +1822,13 @@ export function VisualMap() {
       const pathData = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 
       const isHovered = hoveredConnection === idx;
-      const isConnectedToSelected = selectedBox !== null && (conn.from === selectedBox || conn.to === selectedBox);
+      // Light up connections based on filter mode
+      const isConnectedToSelected = selectedBox !== null && (
+        connectionFilter === 'both' ? (conn.from === selectedBox || conn.to === selectedBox) :
+        connectionFilter === 'outgoing' ? conn.from === selectedBox :
+        connectionFilter === 'incoming' ? conn.to === selectedBox :
+        false
+      );
       const shouldFade = selectedBox !== null && !isConnectedToSelected;
 
       // Calculate midpoint for tooltip positioning
@@ -1823,7 +1836,7 @@ export function VisualMap() {
       const midY = (y1 + y2) / 2;
 
       // Determine opacity and stroke width based on state
-      let opacity = 0.05; // VERY FAINT by default
+      let opacity = 0.4; // Default visibility when connections are shown
       let strokeWidth = "2";
 
       if (isHovered) {
@@ -1834,12 +1847,12 @@ export function VisualMap() {
         opacity = 1.0;
         strokeWidth = "5";
       } else if (selectedBox === null) {
-        // Nothing selected - slightly visible
-        opacity = 0.2;
+        // Nothing selected - all connections clearly visible
+        opacity = 0.5;
         strokeWidth = "2";
       } else if (selectedBox !== null && !isConnectedToSelected) {
-        // Box selected but this line is NOT connected - fade completely
-        opacity = 0.03;
+        // Box selected but this line is NOT connected - fade out
+        opacity = 0.08;
         strokeWidth = "1";
       }
 
@@ -1891,18 +1904,18 @@ export function VisualMap() {
           <defs>
             <marker
               id={`arrowhead-${idx}`}
-              markerWidth="10"
-              markerHeight="10"
-              refX="9"
-              refY="3"
+              markerWidth="16"
+              markerHeight="16"
+              refX="14"
+              refY="7"
               orient="auto"
-              markerUnits="strokeWidth"
+              markerUnits="userSpaceOnUse"
             >
               <path
-                d="M0,0 L0,6 L9,3 z"
+                d="M0,0 L0,14 L14,7 z"
                 fill={conn.color}
-                opacity={isHovered ? "0.8" : "0.6"}
-                style={{ transition: 'opacity 0.2s' }}
+                opacity={isConnectedToSelected || isHovered ? "1.0" : "0.6"}
+                style={{ transition: 'opacity 0.3s' }}
               />
             </marker>
           </defs>
@@ -1944,6 +1957,73 @@ export function VisualMap() {
         >
           {showConnections ? '🔗 Hide' : '🔗 Show'} Connections
         </button>
+
+        {/* Connection Filter Dropdown */}
+        {showConnections && (
+          <div className="relative group">
+            <button
+              className="px-4 py-2 rounded-lg shadow-xl bg-white/90 backdrop-blur-sm hover:bg-white transition-colors text-sm font-medium flex items-center gap-2"
+            >
+              <span>Filter:</span>
+              <span className="font-semibold text-blue-600">
+                {connectionFilter === 'both' ? 'Both' : connectionFilter === 'outgoing' ? 'Outgoing' : 'Incoming'}
+              </span>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-30">
+              <div className="py-2">
+                <button
+                  onClick={() => setConnectionFilter('both')}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-blue-50 transition-colors ${
+                    connectionFilter === 'both' ? 'bg-blue-100 text-blue-800 font-semibold' : 'text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">↔️</span>
+                    <div>
+                      <div>Both Directions</div>
+                      <div className="text-xs text-gray-500">Incoming + Outgoing</div>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setConnectionFilter('outgoing')}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-blue-50 transition-colors ${
+                    connectionFilter === 'outgoing' ? 'bg-blue-100 text-blue-800 font-semibold' : 'text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">→</span>
+                    <div>
+                      <div>Outgoing Only</div>
+                      <div className="text-xs text-gray-500">Lines going out</div>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setConnectionFilter('incoming')}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-blue-50 transition-colors ${
+                    connectionFilter === 'incoming' ? 'bg-blue-100 text-blue-800 font-semibold' : 'text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">←</span>
+                    <div>
+                      <div>Incoming Only</div>
+                      <div className="text-xs text-gray-500">Lines coming in</div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Zoom Controls - Top Right */}
@@ -2140,10 +2220,10 @@ export function VisualMap() {
                   height={currentCluster.height}
                   fill="white"
                   stroke={layerColor}
-                  strokeWidth={isSelected ? "8" : "3"}
+                  strokeWidth={isSelected ? "5" : "3"}
                   rx="12"
                   opacity="0.9"
-                  filter={isSelected ? "drop-shadow(0 0 25px rgba(59, 130, 246, 0.9)) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4))" : "drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))"}
+                  filter={isSelected ? "drop-shadow(0 0 8px rgba(59, 130, 246, 0.35)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.12))" : "drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))"}
                   style={{ transition: 'stroke-width 0.2s ease, filter 0.2s ease' }}
                 />
                 {/* Cluster background fill - CLICKABLE */}
@@ -2153,7 +2233,7 @@ export function VisualMap() {
                   width={currentCluster.width}
                   height={currentCluster.height}
                   fill={layerColor}
-                  opacity={isSelected ? "0.25" : "0.05"}
+                  opacity={isSelected ? "0.12" : "0.05"}
                   rx="12"
                   onClick={() => setSelectedBox(selectedBox === clusterIndex ? null : clusterIndex)}
                   style={{ cursor: 'pointer', transition: 'opacity 0.2s ease' }}

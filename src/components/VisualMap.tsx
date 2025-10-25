@@ -1800,15 +1800,15 @@ export function VisualMap() {
       const x1 = fromEdge.x;
       const y1 = fromEdge.y;
 
-      // Calculate direction and distance
-      const dx = toEdge.x - fromEdge.x;
-      const dy = toEdge.y - fromEdge.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      // For the endpoint, we want all arrows to point to the EXACT same convergence point
+      // No offset - let all arrows converge to the exact same pixel
+      const x2 = toEdge.x;
+      const y2 = toEdge.y;
 
-      // Pull back the endpoint so arrowhead sits just outside the box edge at convergence point
-      const arrowOffset = 12; // Pull back 12 pixels from edge
-      const x2 = toEdge.x - (dx / distance) * arrowOffset;
-      const y2 = toEdge.y - (dy / distance) * arrowOffset;
+      // Calculate direction and distance
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
       // Calculate control points for smooth Bezier curve
       const controlPointOffset = Math.abs(dx) > Math.abs(dy) ? Math.abs(dx) * 0.4 : Math.abs(dy) * 0.4;

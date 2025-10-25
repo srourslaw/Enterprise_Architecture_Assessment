@@ -1641,6 +1641,53 @@ export function VisualMap() {
     { from: 9, to: 2, type: 'transformation', description: 'Implementation delivers new Applications', color: '#A855F7' },
   ];
 
+  // Helper function to calculate edge intersection point
+  const getEdgePoint = (
+    boxCenterX: number,
+    boxCenterY: number,
+    boxWidth: number,
+    boxHeight: number,
+    targetX: number,
+    targetY: number
+  ) => {
+    // Calculate direction from box center to target
+    const dx = targetX - boxCenterX;
+    const dy = targetY - boxCenterY;
+
+    // Avoid division by zero
+    if (dx === 0 && dy === 0) {
+      return { x: boxCenterX, y: boxCenterY };
+    }
+
+    // Calculate the angle
+    const angle = Math.atan2(dy, dx);
+
+    // Half dimensions
+    const halfWidth = boxWidth / 2;
+    const halfHeight = boxHeight / 2;
+
+    // Calculate intersection with box edges
+    // We need to find which edge the line intersects
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    let edgeX = boxCenterX;
+    let edgeY = boxCenterY;
+
+    // Determine which edge to use based on the angle
+    if (absDx / halfWidth > absDy / halfHeight) {
+      // Intersection with left or right edge
+      edgeX = boxCenterX + (dx > 0 ? halfWidth : -halfWidth);
+      edgeY = boxCenterY + (edgeX - boxCenterX) * (dy / dx);
+    } else {
+      // Intersection with top or bottom edge
+      edgeY = boxCenterY + (dy > 0 ? halfHeight : -halfHeight);
+      edgeX = boxCenterX + (edgeY - boxCenterY) * (dx / dy);
+    }
+
+    return { x: edgeX, y: edgeY };
+  };
+
   // Function to render curved arrow connections between boxes
   const renderConnections = () => {
     if (!showConnections) return null;
@@ -1653,11 +1700,29 @@ export function VisualMap() {
       const fromPos = boxPositions[conn.from] || { x: fromBox.x, y: fromBox.y };
       const toPos = boxPositions[conn.to] || { x: toBox.x, y: toBox.y };
 
-      // Calculate start and end points (center of boxes)
-      const x1 = fromPos.x;
-      const y1 = fromPos.y;
-      const x2 = toPos.x;
-      const y2 = toPos.y;
+      // Calculate edge points instead of center points
+      const fromEdge = getEdgePoint(
+        fromPos.x,
+        fromPos.y,
+        fromBox.width,
+        fromBox.height,
+        toPos.x,
+        toPos.y
+      );
+
+      const toEdge = getEdgePoint(
+        toPos.x,
+        toPos.y,
+        toBox.width,
+        toBox.height,
+        fromPos.x,
+        fromPos.y
+      );
+
+      const x1 = fromEdge.x;
+      const y1 = fromEdge.y;
+      const x2 = toEdge.x;
+      const y2 = toEdge.y;
 
       // Calculate control points for smooth Bezier curve
       const dx = x2 - x1;

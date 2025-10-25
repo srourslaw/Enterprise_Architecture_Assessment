@@ -1692,6 +1692,51 @@ export function VisualMap() {
   const renderConnections = () => {
     if (!showConnections) return null;
 
+    // Group connections by source box to calculate bundle points
+    const connectionsBySource: Map<number, number[]> = new Map();
+    connections.forEach((conn, idx) => {
+      if (!connectionsBySource.has(conn.from)) {
+        connectionsBySource.set(conn.from, []);
+      }
+      connectionsBySource.get(conn.from)!.push(idx);
+    });
+
+    // Calculate bundle points for each source box (single convergence point)
+    const bundlePoints: Map<number, { x: number; y: number }> = new Map();
+
+    connectionsBySource.forEach((connIndices, sourceBoxId) => {
+      const fromBox = clusterMetadata[sourceBoxId];
+      const fromPos = boxPositions[sourceBoxId] || { x: fromBox.x, y: fromBox.y };
+
+      // Calculate average direction of all outgoing connections from this source
+      let avgDx = 0;
+      let avgDy = 0;
+
+      connIndices.forEach(idx => {
+        const conn = connections[idx];
+        const toBox = clusterMetadata[conn.to];
+        const toPos = boxPositions[conn.to] || { x: toBox.x, y: toBox.y };
+
+        avgDx += toPos.x - fromPos.x;
+        avgDy += toPos.y - fromPos.y;
+      });
+
+      avgDx /= connIndices.length;
+      avgDy /= connIndices.length;
+
+      // Calculate the bundle point on the edge using average direction
+      const bundlePoint = getEdgePoint(
+        fromPos.x,
+        fromPos.y,
+        fromBox.width,
+        fromBox.height,
+        fromPos.x + avgDx,
+        fromPos.y + avgDy
+      );
+
+      bundlePoints.set(sourceBoxId, bundlePoint);
+    });
+
     return connections.map((conn, idx) => {
       const fromBox = clusterMetadata[conn.from];
       const toBox = clusterMetadata[conn.to];
@@ -1700,16 +1745,10 @@ export function VisualMap() {
       const fromPos = boxPositions[conn.from] || { x: fromBox.x, y: fromBox.y };
       const toPos = boxPositions[conn.to] || { x: toBox.x, y: toBox.y };
 
-      // Calculate edge points instead of center points
-      const fromEdge = getEdgePoint(
-        fromPos.x,
-        fromPos.y,
-        fromBox.width,
-        fromBox.height,
-        toPos.x,
-        toPos.y
-      );
+      // Use the BUNDLE POINT for the source (all lines from same box start from same point)
+      const fromEdge = bundlePoints.get(conn.from)!;
 
+      // Calculate individual edge point for the destination
       const toEdge = getEdgePoint(
         toPos.x,
         toPos.y,

@@ -887,31 +887,31 @@ export function VisualMap() {
 
     const groups = [
       {
-        name: 'Business Model',
+        name: 'Foundation',
         color: '#EC4899',
         apps: [
-          { id: '1.1', name: 'Capabilities', vendors: [] },
-          { id: '1.2', name: 'Value Chains', vendors: [] },
-          { id: '1.3', name: 'Business Model', vendors: [] }
+          { id: '1.1', name: 'Capabilities', vendors: ['LeanIX', 'Ardoq'] },
+          { id: '1.2', name: 'Processes (BPMN)', vendors: ['Bizagi', 'Signavio'] },
+          { id: '1.3', name: 'Org Structure', vendors: ['Workday', 'Lucidchart'] }
         ]
       },
       {
-        name: 'Processes & Org',
+        name: 'Business Objects',
         color: '#8B5CF6',
         apps: [
-          { id: '1.4', name: 'Process Maps', vendors: [] },
-          { id: '1.5', name: 'Org Structure', vendors: [] },
-          { id: '1.6', name: 'Operating Model', vendors: [] }
+          { id: '1.4', name: 'Products', vendors: ['Akeneo', 'Salsify'] },
+          { id: '1.5', name: 'Data Concepts', vendors: ['Collibra', 'Alation'] },
+          { id: '1.6', name: 'Events & Rules', vendors: ['Drools', 'Camunda'] }
         ]
       },
       {
-        name: 'Performance',
+        name: 'Performance & Engagement',
         color: '#3B82F6',
         apps: [
-          { id: '1.7', name: 'KPIs/OKRs', vendors: [] },
-          { id: '1.8', name: 'Customer Journey', vendors: [] },
-          { id: '1.9', name: 'Product Catalog', vendors: [] },
-          { id: '1.10', name: 'Partner Ecosystem', vendors: [] }
+          { id: '1.7', name: 'Journeys', vendors: ['Adobe', 'Salesforce'] },
+          { id: '1.8', name: 'KPIs', vendors: ['Tableau', 'Power BI'] },
+          { id: '1.9', name: 'Contracts', vendors: ['DocuSign', 'Icertis'] },
+          { id: '1.10', name: 'Partners', vendors: ['SAP Ariba', 'Coupa'] }
         ]
       }
     ];
@@ -1606,6 +1606,8 @@ export function VisualMap() {
 
     // Business Implementation
     { from: 1, to: 2, type: 'implementation', description: 'Business processes implemented by Applications', color: '#EC4899' },
+    { from: 1, to: 4, type: 'data', description: 'Business defines data concepts & glossary', color: '#EC4899' },
+    { from: 1, to: 7, type: 'interface', description: 'Business defines customer journeys for UX', color: '#EC4899' },
 
     // Application Integration (bidirectional)
     { from: 2, to: 3, type: 'integration', description: 'Applications communicate via Integration Hub', color: '#F59E0B' },

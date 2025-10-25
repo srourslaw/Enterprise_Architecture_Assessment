@@ -1692,17 +1692,28 @@ export function VisualMap() {
   const renderConnections = () => {
     if (!showConnections) return null;
 
-    // Group connections by source box to calculate bundle points
+    // Group connections by source AND destination box to calculate bundle points
     const connectionsBySource: Map<number, number[]> = new Map();
+    const connectionsByDestination: Map<number, number[]> = new Map();
+
     connections.forEach((conn, idx) => {
+      // Group by source
       if (!connectionsBySource.has(conn.from)) {
         connectionsBySource.set(conn.from, []);
       }
       connectionsBySource.get(conn.from)!.push(idx);
+
+      // Group by destination
+      if (!connectionsByDestination.has(conn.to)) {
+        connectionsByDestination.set(conn.to, []);
+      }
+      connectionsByDestination.get(conn.to)!.push(idx);
     });
 
-    // Calculate bundle points for each source box (single convergence point)
-    const bundlePoints: Map<number, { x: number; y: number }> = new Map();
+    // Calculate bundle points for each source box (single convergence point for outgoing)
+    const sourceBundlePoints: Map<number, { x: number; y: number }> = new Map();
+    // Calculate bundle points for each destination box (single convergence point for incoming)
+    const destBundlePoints: Map<number, { x: number; y: number }> = new Map();
 
     connectionsBySource.forEach((connIndices, sourceBoxId) => {
       const fromBox = clusterMetadata[sourceBoxId];
@@ -1734,7 +1745,41 @@ export function VisualMap() {
         fromPos.y + avgDy
       );
 
-      bundlePoints.set(sourceBoxId, bundlePoint);
+      sourceBundlePoints.set(sourceBoxId, bundlePoint);
+    });
+
+    // Calculate bundle points for each DESTINATION box
+    connectionsByDestination.forEach((connIndices, destBoxId) => {
+      const toBox = clusterMetadata[destBoxId];
+      const toPos = boxPositions[destBoxId] || { x: toBox.x, y: toBox.y };
+
+      // Calculate average direction of all incoming connections to this destination
+      let avgDx = 0;
+      let avgDy = 0;
+
+      connIndices.forEach(idx => {
+        const conn = connections[idx];
+        const fromBox = clusterMetadata[conn.from];
+        const fromPos = boxPositions[conn.from] || { x: fromBox.x, y: fromBox.y };
+
+        avgDx += fromPos.x - toPos.x;
+        avgDy += fromPos.y - toPos.y;
+      });
+
+      avgDx /= connIndices.length;
+      avgDy /= connIndices.length;
+
+      // Calculate the bundle point on the destination edge using average incoming direction
+      const bundlePoint = getEdgePoint(
+        toPos.x,
+        toPos.y,
+        toBox.width,
+        toBox.height,
+        toPos.x + avgDx,
+        toPos.y + avgDy
+      );
+
+      destBundlePoints.set(destBoxId, bundlePoint);
     });
 
     return connections.map((conn, idx) => {
@@ -1746,17 +1791,10 @@ export function VisualMap() {
       const toPos = boxPositions[conn.to] || { x: toBox.x, y: toBox.y };
 
       // Use the BUNDLE POINT for the source (all lines from same box start from same point)
-      const fromEdge = bundlePoints.get(conn.from)!;
+      const fromEdge = sourceBundlePoints.get(conn.from)!;
 
-      // Calculate individual edge point for the destination
-      const toEdge = getEdgePoint(
-        toPos.x,
-        toPos.y,
-        toBox.width,
-        toBox.height,
-        fromPos.x,
-        fromPos.y
-      );
+      // Use the BUNDLE POINT for the destination (all lines to same box end at same point)
+      const toEdge = destBundlePoints.get(conn.to)!;
 
       const x1 = fromEdge.x;
       const y1 = fromEdge.y;
@@ -1785,18 +1823,24 @@ export function VisualMap() {
       const midY = (y1 + y2) / 2;
 
       // Determine opacity and stroke width based on state
-      let opacity = 0.15; // Very faded by default
+      let opacity = 0.05; // VERY FAINT by default
       let strokeWidth = "2";
 
       if (isHovered) {
-        opacity = 0.9;
-        strokeWidth = "4";
+        opacity = 1.0;
+        strokeWidth = "5";
       } else if (isConnectedToSelected) {
-        opacity = 0.8;
-        strokeWidth = "4";
+        // CONNECTED TO SELECTED BOX - LIGHT UP!
+        opacity = 1.0;
+        strokeWidth = "5";
       } else if (selectedBox === null) {
-        opacity = 0.25; // Slightly visible when nothing selected
+        // Nothing selected - slightly visible
+        opacity = 0.2;
         strokeWidth = "2";
+      } else if (selectedBox !== null && !isConnectedToSelected) {
+        // Box selected but this line is NOT connected - fade completely
+        opacity = 0.03;
+        strokeWidth = "1";
       }
 
       return (
@@ -2096,23 +2140,23 @@ export function VisualMap() {
                   height={currentCluster.height}
                   fill="white"
                   stroke={layerColor}
-                  strokeWidth={isSelected ? "5" : "3"}
+                  strokeWidth={isSelected ? "8" : "3"}
                   rx="12"
                   opacity="0.9"
-                  filter={isSelected ? "drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2))" : "drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))"}
-                  style={{ transition: 'stroke-width 0.3s ease, filter 0.3s ease' }}
+                  filter={isSelected ? "drop-shadow(0 0 25px rgba(59, 130, 246, 0.9)) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4))" : "drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))"}
+                  style={{ transition: 'stroke-width 0.2s ease, filter 0.2s ease' }}
                 />
-                {/* Cluster background fill */}
+                {/* Cluster background fill - CLICKABLE */}
                 <rect
                   x={currentCluster.x - currentCluster.width / 2}
                   y={currentCluster.y - currentCluster.height / 2}
                   width={currentCluster.width}
                   height={currentCluster.height}
                   fill={layerColor}
-                  opacity={isSelected ? "0.12" : "0.05"}
+                  opacity={isSelected ? "0.25" : "0.05"}
                   rx="12"
                   onClick={() => setSelectedBox(selectedBox === clusterIndex ? null : clusterIndex)}
-                  style={{ cursor: 'pointer', transition: 'opacity 0.3s ease' }}
+                  style={{ cursor: 'pointer', transition: 'opacity 0.2s ease' }}
                 />
                 {/* Cluster header bar - DRAGGABLE */}
                 <rect

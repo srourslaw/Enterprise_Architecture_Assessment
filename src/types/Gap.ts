@@ -8,7 +8,7 @@ export interface Gap {
   description: string;
   layer: number; // 0-9
   componentId: string;
-  componentName: string;
+  componentName?: string;
 
   // Risk & Impact Scoring (1-5)
   risk: number; // 1=low, 5=critical security/compliance

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAssessment } from '../context/AssessmentContext';
 import { eaLayers } from '../data/eaLayers';
 
@@ -162,7 +162,7 @@ export function Roadmap() {
                       <div className="space-y-3">
                         {phase.gaps.map((gap, gapIndex) => {
                           const layerName = eaLayers.find(l => l.id === gap.layer)?.name || `Layer ${gap.layer}`;
-                          const priorityColors = {
+                          const priorityColors: Record<string, string> = {
                             Critical: 'bg-red-50 border-red-200',
                             High: 'bg-orange-50 border-orange-200',
                             Medium: 'bg-yellow-50 border-yellow-200',
@@ -172,7 +172,7 @@ export function Roadmap() {
                           return (
                             <div
                               key={gap.id}
-                              className={`border rounded-lg p-4 ${priorityColors[gap.priorityBand]}`}
+                              className={`border rounded-lg p-4 ${priorityColors[gap.priorityBand] || 'bg-gray-50 border-gray-200'}`}
                             >
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex-1">

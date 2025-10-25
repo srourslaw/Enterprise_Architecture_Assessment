@@ -347,7 +347,7 @@ export function exportGapAnalysis(gapAnalysis: GapAnalysisResult): GapExportData
     gaps: gapAnalysis.gaps.map(gap => ({
       id: gap.id,
       description: gap.description,
-      priority: gap.priorityBand,
+      priority: String(gap.priorityBand),
       priorityScore: gap.priorityScore,
       layer: gap.layer,
       component: gap.componentId,
@@ -356,7 +356,7 @@ export function exportGapAnalysis(gapAnalysis: GapAnalysisResult): GapExportData
       cost: gap.remediationCost,
       recommendation: gap.recommendation.title,
       timeline: gap.recommendation.timeline,
-      estimatedCost: gap.recommendation.estimatedCost,
+      estimatedCost: gap.recommendation.estimatedCost || 'N/A',
       expectedROI: gap.recommendation.expectedROI
     }))
   };

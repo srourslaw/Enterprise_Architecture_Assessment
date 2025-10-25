@@ -4,24 +4,28 @@ export interface Recommendation {
   title: string;
   description: string;
 
-  // Investment
-  investment: {
+  // Investment (new format)
+  investment?: {
     min: number; // AUD
     max: number; // AUD
   };
 
+  // Legacy format (for backward compatibility)
+  estimatedCost?: string;
+  suggestedVendors?: string[];
+
   // Timeline
   timeline: string; // "4-8 weeks", "6-12 months", etc.
-  initiativeType: InitiativeType;
+  initiativeType?: InitiativeType;
 
   // Expected Returns
   expectedROI: string; // "150-300%", "200-400%"
-  paybackPeriod: string; // "2-4 months", "12-18 months"
+  paybackPeriod?: string; // "2-4 months", "12-18 months"
 
   // Recommendations
   vendor?: string; // Recommended vendor/solution
-  businessBenefit: string;
-  successMetrics: string[];
+  businessBenefit?: string;
+  successMetrics?: string[];
 
   // Additional details
   actions?: string[]; // Step-by-step actions

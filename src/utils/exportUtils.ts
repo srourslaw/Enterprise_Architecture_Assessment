@@ -97,9 +97,9 @@ export function exportGapsToCSV(gapAnalysis: GapAnalysisResult): void {
   // Gap details
   rows.push('Gap ID,Description,Priority Band,Priority Score,Layer,Component,Risk,Impact,Cost,Recommendation,Timeline,Estimated Cost,Expected ROI,Suggested Vendors');
   gapAnalysis.gaps.forEach(gap => {
-    const vendors = gap.recommendation.suggestedVendors.join('; ');
+    const vendors = gap.recommendation.suggestedVendors?.join('; ') || 'N/A';
     rows.push(
-      `${gap.id},"${gap.description}",${gap.priorityBand},${gap.priorityScore},${gap.layer},${gap.componentId},${gap.risk},${gap.businessImpact},${gap.remediationCost},"${gap.recommendation.title}","${gap.recommendation.timeline}","${gap.recommendation.estimatedCost}","${gap.recommendation.expectedROI}","${vendors}"`
+      `${gap.id},"${gap.description}",${gap.priorityBand},${gap.priorityScore},${gap.layer},${gap.componentId},${gap.risk},${gap.businessImpact},${gap.remediationCost},"${gap.recommendation.title}","${gap.recommendation.timeline}","${gap.recommendation.estimatedCost || 'N/A'}","${gap.recommendation.expectedROI}","${vendors}"`
     );
   });
 
@@ -218,7 +218,7 @@ export function generateExecutiveSummary(
       lines.push(`   Layer: ${layerName} | Priority Score: ${gap.priorityScore.toFixed(1)}`);
       lines.push(`   Risk: ${gap.risk}/5 | Impact: ${gap.businessImpact}/5 | Cost: ${gap.remediationCost}/5`);
       lines.push(`   Recommendation: ${gap.recommendation.title}`);
-      lines.push(`   Timeline: ${gap.recommendation.timeline} | Cost: ${gap.recommendation.estimatedCost}`);
+      lines.push(`   Timeline: ${gap.recommendation.timeline} | Cost: ${gap.recommendation.estimatedCost || 'N/A'}`);
       lines.push(`   Expected ROI: ${gap.recommendation.expectedROI}`);
     });
   }

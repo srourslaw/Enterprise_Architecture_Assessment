@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAssessment } from '../context/AssessmentContext';
 import { questions } from '../data/questions';
 

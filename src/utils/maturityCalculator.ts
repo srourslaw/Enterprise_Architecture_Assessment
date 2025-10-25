@@ -1,4 +1,4 @@
-import { Question, QuestionAnswer } from '../types';
+import { Question } from '../types';
 import { eaLayers } from '../data/eaLayers';
 
 /**

@@ -234,11 +234,11 @@ export function GapAnalysis() {
                         </div>
 
                         {/* Suggested Vendors */}
-                        {gap.recommendation.suggestedVendors.length > 0 && (
+                        {gap.recommendation.suggestedVendors && gap.recommendation.suggestedVendors.length > 0 && (
                           <div>
                             <div className="text-sm font-medium text-gray-700 mb-2">Suggested Vendors:</div>
                             <div className="flex flex-wrap gap-2">
-                              {gap.recommendation.suggestedVendors.map((vendor, idx) => (
+                              {gap.recommendation.suggestedVendors?.map((vendor, idx) => (
                                 <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                                   {vendor}
                                 </span>

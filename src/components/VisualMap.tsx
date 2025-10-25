@@ -729,26 +729,26 @@ export function VisualMap() {
         color: '#8B5CF6',
         apps: [
           { id: '0.1', name: 'Business Strategy', vendors: [] },
-          { id: '0.2', name: 'IT Strategy', vendors: [] },
+          { id: '0.2', name: 'Stakeholders', vendors: [] },
           { id: '0.7', name: 'Innovation', vendors: [] }
         ]
       },
       {
-        name: 'Governance',
+        name: 'EA Governance',
         color: '#EC4899',
         apps: [
-          { id: '0.3', name: 'EA Governance', vendors: [] },
-          { id: '0.9', name: 'Standards', vendors: [] },
-          { id: '0.10', name: 'Portfolio Mgmt', vendors: [] }
+          { id: '0.5', name: 'Principles', vendors: ['TOGAF', 'ArchiMate'] },
+          { id: '0.9', name: 'Standards', vendors: ['LeanIX', 'Ardoq'] },
+          { id: '0.10', name: 'Portfolio Mgmt', vendors: ['Planview', 'ServiceNow SPM'] }
         ]
       },
       {
-        name: 'Value & Compliance',
+        name: 'Risk, Value & Compliance',
         color: '#3B82F6',
         apps: [
+          { id: '0.3', name: 'Drivers', vendors: [] },
           { id: '0.4', name: 'Value Streams', vendors: [] },
-          { id: '0.5', name: 'Compliance', vendors: [] },
-          { id: '0.6', name: 'Risk Mgmt', vendors: [] },
+          { id: '0.6', name: 'Risk Mgmt', vendors: ['RSA Archer', 'ServiceNow GRC'] },
           { id: '0.8', name: 'ESG Goals', vendors: [] }
         ]
       }
@@ -1599,8 +1599,10 @@ export function VisualMap() {
   // Define EA layer connections
   // Index mapping: 0=Strategy, 1=Business, 2=Apps, 3=Integration, 4=Data, 5=Platform, 6=Security, 7=UX, 8=DevOps, 9=Implementation
   const connections = [
-    // Strategic Flow
+    // Strategic Flow - Strategy drives everything below
     { from: 0, to: 1, type: 'strategic', description: 'Strategy drives Business Capabilities', color: '#8B5CF6' },
+    { from: 0, to: 6, type: 'strategic', description: 'Strategy defines Security Posture & Compliance Requirements', color: '#8B5CF6' },
+    { from: 0, to: 4, type: 'strategic', description: 'Strategy requires KPIs & Metrics for tracking', color: '#8B5CF6' },
 
     // Business Implementation
     { from: 1, to: 2, type: 'implementation', description: 'Business processes implemented by Applications', color: '#EC4899' },
